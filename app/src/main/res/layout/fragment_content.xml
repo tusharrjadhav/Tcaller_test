@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+        <variable
+            name="model"
+            type="com.tcall.tcall_test.screens.DataModel" />
+
+        <variable
+            name="fragment"
+            type="com.tcall.tcall_test.screens.ContentFragment" />
+
+    </data>
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        >
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="10dp">
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/btnSubmit"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:onClick="@{()->fragment.fetchContent()}"
+                android:text="@string/fetch_data"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/tv1Content"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@{model.char10th}"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/btnSubmit"
+                tools:text="10th Char" />
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/tv2Content"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@{model.wordCount}"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tv1Content"
+                tools:text="Char countr" />
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/tv3Content"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@{model.every10thChar}"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tv2Content"
+                tools:text="Char count" />
+
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.core.widget.NestedScrollView>
+</layout>
