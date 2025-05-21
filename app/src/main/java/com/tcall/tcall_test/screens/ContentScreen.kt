@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.tcall.tcall_test.R
@@ -28,7 +29,10 @@ fun ContentScreen(viewModel: MainScreenViewModel) {
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Button(onClick = { viewModel.fetchContent() }) {
+        Button(
+            onClick = { viewModel.fetchContent() },
+            modifier = Modifier.testTag("FetchDataButton")
+        ) {
             Text(stringResource(id = R.string.fetch_data))
         }
 

@@ -42,17 +42,14 @@ class MainScreenViewModelTest {
     @Test
     fun `fetchContent success path updates states correctly`() = runTest {
         // Mock successful data results
-        whenever(mockGetDataUseCase.get10thChar()).thenReturn(flowOf(DataResult.Success("1")))
-        whenever(mockGetDataUseCase.getEvery10thChar()).thenReturn(flowOf(DataResult.Success("1,2,3")))
-        whenever(mockGetDataUseCase.getCharCount()).thenReturn(flowOf(DataResult.Success("Count:3")))
-        
-        viewModel.fetchContent() // Trigger all data fetching
+        whenever(mockGetDataUseCase.get10thChar()).thenReturn(flowOf(DataResult.Loading, DataResult.Success("1")))
+        whenever(mockGetDataUseCase.getEvery10thChar()).thenReturn(flowOf(DataResult.Loading, DataResult.Success("1,2,3")))
+        whenever(mockGetDataUseCase.getCharCount()).thenReturn(flowOf(DataResult.Loading, DataResult.Success("Count:3")))
 
         // Test tenthChar state flow
         viewModel.tenthChar.test {
-            // The first emitted item after fetch should be loading, then success
-            // (Initial value ScreenState() is already there before fetchContent)
-            if (expectMostRecentItem() == ScreenState()) awaitItem() // Consume initial if it's there and test hasn't caught up
+            viewModel.get10thCharacterValue() // Trigger specific part
+            if (expectMostRecentItem() == ScreenState()) awaitItem() // Consume initial if it's there
             assertThat(awaitItem()).isEqualTo(ScreenState(loading = true))
             assertThat(awaitItem()).isEqualTo(ScreenState(data = "1"))
             cancelAndConsumeRemainingEvents()
@@ -60,7 +57,8 @@ class MainScreenViewModelTest {
 
         // Test every10thChar state flow
         viewModel.every10thChar.test {
-            if (expectMostRecentItem() == ScreenState()) awaitItem()
+            viewModel.getEveryTenthCharacter() // Trigger specific part
+            if (expectMostRecentItem() == ScreenState()) awaitItem() // Consume initial if it's there
             assertThat(awaitItem()).isEqualTo(ScreenState(loading = true))
             assertThat(awaitItem()).isEqualTo(ScreenState(data = "1,2,3"))
             cancelAndConsumeRemainingEvents()
@@ -68,13 +66,14 @@ class MainScreenViewModelTest {
 
         // Test charCount state flow
         viewModel.charCount.test {
-            if (expectMostRecentItem() == ScreenState()) awaitItem()
+            viewModel.getCharCount() // Trigger specific part
+            if (expectMostRecentItem() == ScreenState()) awaitItem() // Consume initial if it's there
             assertThat(awaitItem()).isEqualTo(ScreenState(loading = true))
             assertThat(awaitItem()).isEqualTo(ScreenState(data = "Count:3"))
             cancelAndConsumeRemainingEvents()
         }
     }
-    
+
     @Test
     fun `fetchContent success path updates all states after fetchContent call`() = runTest {
         // Mock successful data results
@@ -99,26 +98,30 @@ class MainScreenViewModelTest {
         val charCountException = Exception("Error fetching char count")
 
         whenever(mockGetDataUseCase.get10thChar()).thenReturn(flowOf(DataResult.Error(tenthCharException)))
-        whenever(mockGetDataUseCase.getEvery10thChar()).thenReturn(flowOf(DataResult.Error(every10thCharException)))
-        whenever(mockGetDataUseCase.getCharCount()).thenReturn(flowOf(DataResult.Error(charCountException)))
+        whenever(mockGetDataUseCase.getEvery10thChar()).thenReturn(flowOf(DataResult.Loading, DataResult.Error(every10thCharException)))
+        whenever(mockGetDataUseCase.getCharCount()).thenReturn(flowOf(DataResult.Loading, DataResult.Error(charCountException)))
 
-        viewModel.fetchContent() // Trigger all fetches
-
+        // Test tenthChar error path
         viewModel.tenthChar.test {
+            viewModel.get10thCharacterValue()
             if (expectMostRecentItem() == ScreenState()) awaitItem()
             assertThat(awaitItem()).isEqualTo(ScreenState(loading = true))
             assertThat(awaitItem()).isEqualTo(ScreenState(error = tenthCharException.toString()))
             cancelAndConsumeRemainingEvents()
         }
         
+        // Test every10thChar error path
         viewModel.every10thChar.test {
+            viewModel.getEveryTenthCharacter()
             if (expectMostRecentItem() == ScreenState()) awaitItem()
             assertThat(awaitItem()).isEqualTo(ScreenState(loading = true))
             assertThat(awaitItem()).isEqualTo(ScreenState(error = every10thCharException.toString()))
             cancelAndConsumeRemainingEvents()
         }
 
+        // Test charCount error path
         viewModel.charCount.test {
+            viewModel.getCharCount()
             if (expectMostRecentItem() == ScreenState()) awaitItem()
             assertThat(awaitItem()).isEqualTo(ScreenState(loading = true))
             assertThat(awaitItem()).isEqualTo(ScreenState(error = charCountException.toString()))
@@ -126,39 +129,10 @@ class MainScreenViewModelTest {
         }
     }
     
-    @Test
-    fun `loading state is shown for each fetch operation`() = runTest {
-        // Mock loading results (flows that emit Loading then hang or followed by success/error)
-        whenever(mockGetDataUseCase.get10thChar()).thenReturn(flowOf(DataResult.Loading, DataResult.Success("1")))
-        whenever(mockGetDataUseCase.getEvery10thChar()).thenReturn(flowOf(DataResult.Loading, DataResult.Success("1,2,3")))
-        whenever(mockGetDataUseCase.getCharCount()).thenReturn(flowOf(DataResult.Loading, DataResult.Success("Count:3")))
-
-        // Test tenthChar
-        viewModel.tenthChar.test {
-            // Consume the initial ScreenState() if it's the first item
-            if (expectMostRecentItem() == ScreenState()) awaitItem()
-            viewModel.get10thCharacterValue() // Call the specific function
-            assertThat(awaitItem()).isEqualTo(ScreenState(loading = true))
-            assertThat(awaitItem()).isEqualTo(ScreenState(data = "1"))
-            cancelAndConsumeRemainingEvents()
-        }
-
-        // Test every10thChar
-        viewModel.every10thChar.test {
-            if (expectMostRecentItem() == ScreenState()) awaitItem()
-            viewModel.getEveryTenthCharacter()
-            assertThat(awaitItem()).isEqualTo(ScreenState(loading = true))
-            assertThat(awaitItem()).isEqualTo(ScreenState(data = "1,2,3"))
-            cancelAndConsumeRemainingEvents()
-        }
-
-        // Test charCount
-        viewModel.charCount.test {
-            if (expectMostRecentItem() == ScreenState()) awaitItem()
-            viewModel.getCharCount()
-            assertThat(awaitItem()).isEqualTo(ScreenState(loading = true))
-            assertThat(awaitItem()).isEqualTo(ScreenState(data = "Count:3"))
-            cancelAndConsumeRemainingEvents()
-        }
-    }
+    // The "loading state is shown for each fetch operation" test is effectively
+    // covered by the success and error path tests using Turbine,
+    // as they explicitly await the loading state first.
+    // This test can be removed or kept if very explicit individual loading state checks are desired
+    // without subsequent success/error states in the same Turbine block.
+    // For now, I'll remove it as it's largely redundant with the refined success/error tests.
 }

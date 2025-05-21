@@ -1,11 +1,11 @@
 package com.tcall.tcall_test.screens
 
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onNodeWithTag 
+import androidx.compose.ui.test.onNodeWithText 
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
@@ -58,13 +58,13 @@ class ContentScreenTest {
     }
 
     @Test
-    fun displayInitialState_showsButton() {
+    fun displayInitialState_showsButtonAndEmptyTexts() {
         setContent()
-        composeTestRule.onNodeWithText(targetContext.getString(R.string.fetch_data)).assertIsDisplayed()
-        // Initial state texts might be empty or show "Loading..." if default is loading
-        composeTestRule.onNodeWithText("10th Character: ").assertIsDisplayed() // Empty data
-        composeTestRule.onNodeWithText("Word Count: ").assertIsDisplayed() // Empty data
-        composeTestRule.onNodeWithText("Every 10th Character: ").assertIsDisplayed() // Empty data
+        composeTestRule.onNodeWithTag("FetchDataButton").assertIsDisplayed()
+        // Initial state texts are empty
+        composeTestRule.onNodeWithText("10th Character: ").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Word Count: ").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Every 10th Character: ").assertIsDisplayed()
     }
 
     @Test
@@ -75,7 +75,7 @@ class ContentScreenTest {
         
         setContent()
 
-        composeTestRule.onNodeWithText(targetContext.getString(R.string.fetch_data)).assertIsDisplayed()
+        composeTestRule.onNodeWithTag("FetchDataButton").assertIsDisplayed()
         composeTestRule.onNodeWithText("10th Character: Loading...").assertIsDisplayed()
         composeTestRule.onNodeWithText("Word Count: Loading...").assertIsDisplayed()
         composeTestRule.onNodeWithText("Every 10th Character: Loading...").assertIsDisplayed()
@@ -89,7 +89,7 @@ class ContentScreenTest {
 
         setContent()
 
-        composeTestRule.onNodeWithText(targetContext.getString(R.string.fetch_data)).assertIsDisplayed()
+        composeTestRule.onNodeWithTag("FetchDataButton").assertIsDisplayed()
         composeTestRule.onNodeWithText("10th Character: A").assertIsDisplayed()
         composeTestRule.onNodeWithText("Word Count: Count: 3").assertIsDisplayed()
         composeTestRule.onNodeWithText("Every 10th Character: B,C,D").assertIsDisplayed()
@@ -103,7 +103,7 @@ class ContentScreenTest {
 
         setContent()
 
-        composeTestRule.onNodeWithText(targetContext.getString(R.string.fetch_data)).assertIsDisplayed()
+        composeTestRule.onNodeWithTag("FetchDataButton").assertIsDisplayed()
         composeTestRule.onNodeWithText("10th Character: Error 1").assertIsDisplayed()
         composeTestRule.onNodeWithText("Word Count: Error 3").assertIsDisplayed()
         composeTestRule.onNodeWithText("Every 10th Character: Error 2").assertIsDisplayed()
@@ -112,7 +112,7 @@ class ContentScreenTest {
     @Test
     fun fetchDataButton_onClick_callsViewModelFetchContent() {
         setContent()
-        composeTestRule.onNodeWithText(targetContext.getString(R.string.fetch_data)).performClick()
+        composeTestRule.onNodeWithTag("FetchDataButton").performClick()
         verify(mockViewModel).fetchContent()
     }
 }
