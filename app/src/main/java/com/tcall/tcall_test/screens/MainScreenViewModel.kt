@@ -86,4 +86,16 @@ class MainScreenViewModel @Inject constructor(
             }
         }.launchIn(viewModelScope)
     }
+
+    fun dismissTenthCharError() {
+        _tenthChar.value = _tenthChar.value.copy(error = "")
+    }
+
+    fun dismissEvery10thCharError() {
+        _every10thChar.value = _every10thChar.value.copy(error = "")
+    }
+
+    fun dismissCharCountError() {
+        _charCount.value = _charCount.value.copy(error = "")
+    }
 }

@@ -61,10 +61,10 @@ class ContentScreenTest {
     fun displayInitialState_showsButtonAndEmptyTexts() {
         setContent()
         composeTestRule.onNodeWithTag("FetchDataButton").assertIsDisplayed()
-        // Initial state texts are empty
-        composeTestRule.onNodeWithText("10th Character: ").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Word Count: ").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Every 10th Character: ").assertIsDisplayed()
+        // Initial state texts are N/A as per ContentScreen logic for empty data when not loading
+        composeTestRule.onNodeWithText("10th Character: N/A").assertIsDisplayed() 
+        composeTestRule.onNodeWithText("Word Count: N/A").assertIsDisplayed() 
+        composeTestRule.onNodeWithText("Every 10th Character: N/A").assertIsDisplayed()
     }
 
     @Test
@@ -96,17 +96,93 @@ class ContentScreenTest {
     }
 
     @Test
-    fun displayContent_ErrorPath_showsErrorMessages() {
-        tenthCharState.value = ScreenState(error = "Error 1")
-        every10thCharState.value = ScreenState(error = "Error 2")
-        charCountState.value = ScreenState(error = "Error 3")
+    fun displayContent_ErrorPath_showsNA_andErrorDialog_forTenthChar() {
+        val errorMessage = "Error for 10th Char"
+        tenthCharState.value = ScreenState(error = errorMessage)
+        every10thCharState.value = ScreenState(data = "B,C,D") // No error for others
+        charCountState.value = ScreenState(data = "Count: 3")   // No error for others
 
         setContent()
 
         composeTestRule.onNodeWithTag("FetchDataButton").assertIsDisplayed()
-        composeTestRule.onNodeWithText("10th Character: Error 1").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Word Count: Error 3").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Every 10th Character: Error 2").assertIsDisplayed()
+        // Text fields show N/A for the errored field, and data for others
+        composeTestRule.onNodeWithText("10th Character: N/A").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Word Count: Count: 3").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Every 10th Character: B,C,D").assertIsDisplayed()
+
+        // Dialog assertions
+        composeTestRule.onNodeWithText("Error").assertIsDisplayed() // Dialog Title
+        composeTestRule.onNodeWithText(errorMessage).assertIsDisplayed()
+        composeTestRule.onNodeWithText("OK").assertIsDisplayed()
+    }
+
+    @Test
+    fun displayContent_ErrorPath_showsNA_andErrorDialog_forEvery10th() {
+        val errorMessage = "Error for every 10th"
+        tenthCharState.value = ScreenState(data = "A")
+        every10thCharState.value = ScreenState(error = errorMessage)
+        charCountState.value = ScreenState(data = "Count: 3")
+
+        setContent()
+        
+        composeTestRule.onNodeWithText("Every 10th Character: N/A").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Error").assertIsDisplayed() 
+        composeTestRule.onNodeWithText(errorMessage).assertIsDisplayed()
+        composeTestRule.onNodeWithText("OK").assertIsDisplayed()
+    }
+
+    @Test
+    fun displayContent_ErrorPath_showsNA_andErrorDialog_forCharCount() {
+        val errorMessage = "Error for char count"
+        tenthCharState.value = ScreenState(data = "A")
+        every10thCharState.value = ScreenState(data = "B,C,D")
+        charCountState.value = ScreenState(error = errorMessage)
+
+        setContent()
+
+        composeTestRule.onNodeWithText("Word Count: N/A").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Error").assertIsDisplayed() 
+        composeTestRule.onNodeWithText(errorMessage).assertIsDisplayed()
+        composeTestRule.onNodeWithText("OK").assertIsDisplayed()
+    }
+    
+    @Test
+    fun errorDialog_forTenthChar_dismissesCorrectly_andCallsViewModel() {
+        val errorMessage = "Error for 10th Char"
+        tenthCharState.value = ScreenState(error = errorMessage)
+        setContent()
+
+        composeTestRule.onNodeWithText(errorMessage).assertIsDisplayed()
+        composeTestRule.onNodeWithText("OK").performClick()
+
+        verify(mockViewModel).dismissTenthCharError()
+        composeTestRule.onNodeWithText(errorMessage).assertDoesNotExist()
+    }
+
+    @Test
+    fun errorDialog_forEvery10thChar_dismissesCorrectly_andCallsViewModel() {
+        val errorMessage = "Error for every 10th"
+        every10thCharState.value = ScreenState(error = errorMessage)
+        setContent()
+
+        composeTestRule.onNodeWithText(errorMessage).assertIsDisplayed()
+        composeTestRule.onNodeWithText("OK").performClick()
+
+        verify(mockViewModel).dismissEvery10thCharError()
+        composeTestRule.onNodeWithText(errorMessage).assertDoesNotExist()
+    }
+
+    @Test
+    fun errorDialog_forCharCount_dismissesCorrectly_andCallsViewModel() {
+        val errorMessage = "Error for char count"
+        charCountState.value = ScreenState(error = errorMessage)
+        setContent()
+
+        composeTestRule.onNodeWithText(errorMessage).assertIsDisplayed()
+        composeTestRule.onNodeWithText("OK").performClick()
+
+        verify(mockViewModel).dismissCharCountError()
+        composeTestRule.onNodeWithText(errorMessage).assertDoesNotExist()
     }
 
     @Test
