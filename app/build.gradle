@@ -82,8 +82,8 @@ dependencies {
     implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.9.0'
     kapt "com.google.dagger:dagger-compiler:$daggerVersion"
     kapt "com.google.dagger:hilt-android-compiler:$hiltVersion"
-    kapt "androidx.hilt:hilt-compiler:$hiltAndroidXVersion"
-    implementation "androidx.hilt:hilt-lifecycle-viewmodel:$hiltAndroidXVersion"
+    // kapt "androidx.hilt:hilt-compiler:$hiltAndroidXVersion" // Removed
+    // implementation "androidx.hilt:hilt-lifecycle-viewmodel:$hiltAndroidXVersion" // Removed
 
 
     // Kotlin
