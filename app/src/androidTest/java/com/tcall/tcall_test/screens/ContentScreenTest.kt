@@ -1,0 +1,194 @@
+package com.tcall.tcall_test.screens
+
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithTag 
+import androidx.compose.ui.test.onNodeWithText 
+import androidx.compose.ui.test.performClick
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
+import com.tcall.tcall_test.R
+import com.tcall.tcall_test.ui.theme.TCall_testTheme
+import org.junit.Before
+import org.junit.Rule
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.mockito.Mock
+import org.mockito.Mockito.verify
+import org.mockito.MockitoAnnotations
+import org.mockito.kotlin.whenever
+
+@RunWith(AndroidJUnit4::class)
+class ContentScreenTest {
+
+    @get:Rule
+    val composeTestRule = createComposeRule()
+
+    @Mock
+    private lateinit var mockViewModel: MainScreenViewModel
+
+    // MutableStates to control the ViewModel's state from the test
+    private lateinit var tenthCharState: MutableState<ScreenState>
+    private lateinit var every10thCharState: MutableState<ScreenState>
+    private lateinit var charCountState: MutableState<ScreenState>
+    
+    private val targetContext by lazy { InstrumentationRegistry.getInstrumentation().targetContext }
+
+    @Before
+    fun setUp() {
+        MockitoAnnotations.openMocks(this) // Initialize mocks
+
+        tenthCharState = mutableStateOf(ScreenState())
+        every10thCharState = mutableStateOf(ScreenState())
+        charCountState = mutableStateOf(ScreenState())
+
+        whenever(mockViewModel.tenthChar).thenReturn(tenthCharState)
+        whenever(mockViewModel.every10thChar).thenReturn(every10thCharState)
+        whenever(mockViewModel.charCount).thenReturn(charCountState)
+    }
+
+    private fun setContent() {
+        composeTestRule.setContent {
+            TCall_testTheme {
+                ContentScreen(viewModel = mockViewModel)
+            }
+        }
+    }
+
+    @Test
+    fun displayInitialState_showsButtonAndEmptyTexts() {
+        setContent()
+        composeTestRule.onNodeWithTag("FetchDataButton").assertIsDisplayed()
+        // Initial state texts are N/A as per ContentScreen logic for empty data when not loading
+        composeTestRule.onNodeWithText("10th Character: N/A").assertIsDisplayed() 
+        composeTestRule.onNodeWithText("Word Count: N/A").assertIsDisplayed() 
+        composeTestRule.onNodeWithText("Every 10th Character: N/A").assertIsDisplayed()
+    }
+
+    @Test
+    fun displayLoadingState_showsLoadingText() {
+        tenthCharState.value = ScreenState(loading = true)
+        every10thCharState.value = ScreenState(loading = true)
+        charCountState.value = ScreenState(loading = true)
+        
+        setContent()
+
+        composeTestRule.onNodeWithTag("FetchDataButton").assertIsDisplayed()
+        composeTestRule.onNodeWithText("10th Character: Loading...").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Word Count: Loading...").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Every 10th Character: Loading...").assertIsDisplayed()
+    }
+
+    @Test
+    fun displayContent_SuccessPath_showsData() {
+        tenthCharState.value = ScreenState(data = "A")
+        every10thCharState.value = ScreenState(data = "B,C,D")
+        charCountState.value = ScreenState(data = "Count: 3")
+
+        setContent()
+
+        composeTestRule.onNodeWithTag("FetchDataButton").assertIsDisplayed()
+        composeTestRule.onNodeWithText("10th Character: A").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Word Count: Count: 3").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Every 10th Character: B,C,D").assertIsDisplayed()
+    }
+
+    @Test
+    fun displayContent_ErrorPath_showsNA_andErrorDialog_forTenthChar() {
+        val errorMessage = "Error for 10th Char"
+        tenthCharState.value = ScreenState(error = errorMessage)
+        every10thCharState.value = ScreenState(data = "B,C,D") // No error for others
+        charCountState.value = ScreenState(data = "Count: 3")   // No error for others
+
+        setContent()
+
+        composeTestRule.onNodeWithTag("FetchDataButton").assertIsDisplayed()
+        // Text fields show N/A for the errored field, and data for others
+        composeTestRule.onNodeWithText("10th Character: N/A").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Word Count: Count: 3").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Every 10th Character: B,C,D").assertIsDisplayed()
+
+        // Dialog assertions
+        composeTestRule.onNodeWithText("Error").assertIsDisplayed() // Dialog Title
+        composeTestRule.onNodeWithText(errorMessage).assertIsDisplayed()
+        composeTestRule.onNodeWithText("OK").assertIsDisplayed()
+    }
+
+    @Test
+    fun displayContent_ErrorPath_showsNA_andErrorDialog_forEvery10th() {
+        val errorMessage = "Error for every 10th"
+        tenthCharState.value = ScreenState(data = "A")
+        every10thCharState.value = ScreenState(error = errorMessage)
+        charCountState.value = ScreenState(data = "Count: 3")
+
+        setContent()
+        
+        composeTestRule.onNodeWithText("Every 10th Character: N/A").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Error").assertIsDisplayed() 
+        composeTestRule.onNodeWithText(errorMessage).assertIsDisplayed()
+        composeTestRule.onNodeWithText("OK").assertIsDisplayed()
+    }
+
+    @Test
+    fun displayContent_ErrorPath_showsNA_andErrorDialog_forCharCount() {
+        val errorMessage = "Error for char count"
+        tenthCharState.value = ScreenState(data = "A")
+        every10thCharState.value = ScreenState(data = "B,C,D")
+        charCountState.value = ScreenState(error = errorMessage)
+
+        setContent()
+
+        composeTestRule.onNodeWithText("Word Count: N/A").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Error").assertIsDisplayed() 
+        composeTestRule.onNodeWithText(errorMessage).assertIsDisplayed()
+        composeTestRule.onNodeWithText("OK").assertIsDisplayed()
+    }
+    
+    @Test
+    fun errorDialog_forTenthChar_dismissesCorrectly_andCallsViewModel() {
+        val errorMessage = "Error for 10th Char"
+        tenthCharState.value = ScreenState(error = errorMessage)
+        setContent()
+
+        composeTestRule.onNodeWithText(errorMessage).assertIsDisplayed()
+        composeTestRule.onNodeWithText("OK").performClick()
+
+        verify(mockViewModel).dismissTenthCharError()
+        composeTestRule.onNodeWithText(errorMessage).assertDoesNotExist()
+    }
+
+    @Test
+    fun errorDialog_forEvery10thChar_dismissesCorrectly_andCallsViewModel() {
+        val errorMessage = "Error for every 10th"
+        every10thCharState.value = ScreenState(error = errorMessage)
+        setContent()
+
+        composeTestRule.onNodeWithText(errorMessage).assertIsDisplayed()
+        composeTestRule.onNodeWithText("OK").performClick()
+
+        verify(mockViewModel).dismissEvery10thCharError()
+        composeTestRule.onNodeWithText(errorMessage).assertDoesNotExist()
+    }
+
+    @Test
+    fun errorDialog_forCharCount_dismissesCorrectly_andCallsViewModel() {
+        val errorMessage = "Error for char count"
+        charCountState.value = ScreenState(error = errorMessage)
+        setContent()
+
+        composeTestRule.onNodeWithText(errorMessage).assertIsDisplayed()
+        composeTestRule.onNodeWithText("OK").performClick()
+
+        verify(mockViewModel).dismissCharCountError()
+        composeTestRule.onNodeWithText(errorMessage).assertDoesNotExist()
+    }
+
+    @Test
+    fun fetchDataButton_onClick_callsViewModelFetchContent() {
+        setContent()
+        composeTestRule.onNodeWithTag("FetchDataButton").performClick()
+        verify(mockViewModel).fetchContent()
+    }
+}
