@@ -1,18 +1,9 @@
 package com.tcall.tcall_test.util
 
-import android.text.SpannableStringBuilder
-import androidx.annotation.VisibleForTesting
-import androidx.core.text.bold
-
 object StringOperations {
 
-    @VisibleForTesting
     const val preText10thChar = "10th character displayed on the screen is:"
-
-    @VisibleForTesting
     const val preTextEvery10thChar = "Every 10th is: "
-
-    @VisibleForTesting
     const val preTextDistinct = "Distinct word count: "
 
     fun getTenthCharacter(value: String?): String {

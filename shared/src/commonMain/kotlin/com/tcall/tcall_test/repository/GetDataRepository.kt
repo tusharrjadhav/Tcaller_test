@@ -1,23 +1,21 @@
 package com.tcall.tcall_test.repository
 
-import com.tcall.tcall_test.repository.api.NetworkService
+import com.tcall.tcall_test.repository.api.NetworkService // expect interface
 import com.tcall.tcall_test.util.DataResult
 import com.tcall.tcall_test.util.StringOperations
-import dagger.hilt.android.scopes.ViewModelScoped
-import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import javax.inject.Inject
 
-@ViewModelScoped
-class GetDataRepository @Inject constructor(
-    private val networkService: NetworkService,
-    private val ioDispatcher: CoroutineDispatcher
-) : DataRepository<DataResult<String>> {
+// Removed Hilt annotations: @Singleton, @Inject
+// Removed ioDispatcher from constructor
+class GetDataRepository constructor(
+    private val networkService: NetworkService
+) : DataRepository<DataResult<String>> { // DataRepository from commonMain
 
     override suspend fun getData(): DataResult<String> = try {
-        withContext(ioDispatcher) {
-            val content = networkService.getUrlContent()
-            content.body()
+        // Changed from withContext(ioDispatcher) to withContext(Dispatchers.Default)
+        withContext(Dispatchers.Default) {
+            networkService.getUrlContent() // Directly returns String
         }.let {
            DataResult.Success(it)
         }

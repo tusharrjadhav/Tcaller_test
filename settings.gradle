@@ -14,3 +14,5 @@ dependencyResolutionManagement {
 }
 rootProject.name = "TCall_test"
 include ':app'
+include ':shared'
+include ':iosApp'

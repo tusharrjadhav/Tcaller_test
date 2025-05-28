@@ -68,6 +68,5 @@ class NetworkModule {
 
     @Singleton
     @Provides
-    fun provideApi(retrofit: Retrofit): NetworkService =
-        retrofit.create(NetworkService::class.java)
+    fun provideApi(): com.tcall.tcall_test.repository.api.NetworkService = com.tcall.tcall_test.repository.api.NetworkService()
 }
